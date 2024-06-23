@@ -1,3 +1,4 @@
+SHELL = /bin/zsh
 .DEFAULT_GOAL := run 
 MAIN := main
 

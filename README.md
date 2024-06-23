@@ -1,2 +1,3 @@
-# Clotho
-Relational database implementation in Go
+# Clotho-MK0
+
+First Relational database implementation in Go

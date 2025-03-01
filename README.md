@@ -1,3 +1,3 @@
 # Clotho-MK0
 
-First Relational database implementation in Go
+very simple (and probably worst perfotming) Relational database managment system implementation in Go for learning purposes

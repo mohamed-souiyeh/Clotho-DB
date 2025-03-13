@@ -1,3 +1,3 @@
-# Clotho-MK0
+# Clotho-DB
 
-very simple (and probably worst perfotming) Relational database managment system implementation in Go for learning purposes
+very simple (and probably worst performing) Relational database managment system implementation in Go for learning purposes.

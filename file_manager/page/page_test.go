@@ -2,6 +2,7 @@ package page_test
 
 import (
 	p "Clotho/file_manager/page"
+	"bytes"
 	"encoding/binary"
 	"testing"
 )
@@ -141,9 +142,175 @@ func TestGetInt(t *testing.T) {
 	})
 }
 
+func TestEncodingSize(t *testing.T) {
+	t.Run("int32 Encoding size", func(t *testing.T) {
 
-func TestSetString(t *testing.T) {
-	t.Run("setting a string at offset 0", func(t *testing.T) {
-		
+		var val int32 = 42
+
+		expected := binary.Size(val)
+
+		got, err := p.EncodingSize(val)
+
+		asserNoError(t, err)
+
+		if got != expected {
+			t.Errorf("size: got '%d' but expected '%d'", got, expected)
+		}
+	})
+
+	t.Run("string Encoding size", func(t *testing.T) {
+
+		var val string = "blabla"
+
+		expected := binary.Size([]byte(val)) + binary.Size(int32(1))
+
+		got, err := p.EncodingSize(val)
+
+		asserNoError(t, err)
+
+		if got != expected {
+			t.Errorf("size: got '%d' but expected '%d'", got, expected)
+		}
+	})
+
+	t.Run("unsuported type Encoding size", func(t *testing.T) {
+
+		var val map[int]int
+
+		expected := binary.Size(val)
+
+		got, err := p.EncodingSize(val)
+
+		asserError(t, err)
+
+		if got != expected {
+			t.Errorf("size: got '%d' but expected '%d'", got, expected)
+		}
+	})
+
+	t.Run("unsuported platform specific (e.g int, uint) type Encoding size", func(t *testing.T) {
+
+		var val int
+
+		expected := binary.Size(val)
+
+		got, err := p.EncodingSize(val)
+
+		asserError(t, err)
+
+		if got != expected {
+			t.Errorf("size: got '%d' but expected '%d'", got, expected)
+		}
+	})
+
+}
+
+func TestSetGetBlob(t *testing.T) {
+	t.Run("setting & getting a blob at offset 0", func(t *testing.T) {
+		page := p.NewPage(42)
+
+		blob := []byte{1, 2, 3, 4, 5, 6}
+		offset := p.Offset(0)
+
+		err := page.SetBlob(blob, offset)
+
+		asserNoError(t, err)
+
+		got, err := page.GetBlob(offset)
+
+		asserNoError(t, err)
+
+		if bytes.Equal(blob, got) != true {
+			t.Errorf("blob: got %v but expected %v", got, blob)
+		}
+	})
+
+	t.Run("setting & getting a blob at offset 13", func(t *testing.T) {
+		page := p.NewPage(42)
+
+		blob := []byte{1, 2, 3, 4, 5, 6}
+		offset := p.Offset(13)
+
+		err := page.SetBlob(blob, offset)
+
+		asserNoError(t, err)
+
+		got, err := page.GetBlob(offset)
+
+		asserNoError(t, err)
+
+		if bytes.Equal(blob, got) != true {
+			t.Errorf("blob: got %v but expected %v", got, blob)
+		}
+	})
+
+	t.Run("setting & getting a blob at offset more than page size", func(t *testing.T) {
+		page := p.NewPage(42)
+
+		blob := []byte{1, 2, 3, 4, 5, 6}
+		offset := p.Offset(42)
+
+		err := page.SetBlob(blob, offset)
+
+		asserError(t, err)
+
+		_, err = page.GetBlob(offset)
+
+		asserError(t, err)
+	})
+
+	t.Run("setting & getting a blob at a negative offset", func(t *testing.T) {
+		page := p.NewPage(42)
+
+		blob := []byte{1, 2, 3, 4, 5, 6}
+		offset := p.Offset(-42)
+
+		err := page.SetBlob(blob, offset)
+
+		asserError(t, err)
+
+		_, err = page.GetBlob(offset)
+
+		asserError(t, err)
+	})
+}
+
+func TestSetGetString(t *testing.T) {
+	t.Run("setting & getting a string at offset 0", func(t *testing.T) {
+		page := p.NewPage(42)
+
+		expected := "hello there"
+		offset := p.Offset(0)
+
+		err := page.SetString(expected, offset)
+
+		asserNoError(t, err)
+
+		got, err := page.GetString(offset)
+
+		asserNoError(t, err)
+
+		if got != expected {
+			t.Errorf("string: got %q but expected %q", got, expected)
+		}
+	})
+
+	t.Run("setting & getting a string at offset 13", func(t *testing.T) {
+		page := p.NewPage(42)
+
+		expected := "hello there"
+		offset := p.Offset(13)
+
+		err := page.SetString(expected, offset)
+
+		asserNoError(t, err)
+
+		got, err := page.GetString(offset)
+
+		asserNoError(t, err)
+
+		if got != expected {
+			t.Errorf("string: got %q but expected %q", got, expected)
+		}
 	})
 }

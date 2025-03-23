@@ -2,7 +2,6 @@ package page_test
 
 import (
 	p "Clotho/file_manager/page"
-	"bytes"
 	"encoding/binary"
 	"testing"
 )
@@ -30,16 +29,16 @@ func TestSetInt(t *testing.T) {
 		var val int32 = 1337
 		var offset p.Offset = 0
 
-		err := page.SetInt32(val, offset)
+		got, err := page.SetInt32(val, offset)
 
 		asserNoError(t, err)
 
-		var got int32
+		expected, err := p.EncodingSize(val)
 
-		binary.Decode(page.Bytes()[offset:], binary.NativeEndian, &got)
+		asserNoError(t, err)
 
-		if got != val {
-			t.Errorf("got '%d' but expected '%d'", got, val)
+		if got != expected {
+			t.Errorf("SetInt failed: got '%d' but expected '%d' written bytes", got, val)
 		}
 	})
 
@@ -49,17 +48,16 @@ func TestSetInt(t *testing.T) {
 		var val int32 = 1337
 		var offset p.Offset = 13
 
-		err := page.SetInt32(val, offset)
+		got, err := page.SetInt32(val, offset)
 
 		asserNoError(t, err)
 
-		valsize := binary.Size(val)
-		var got int32
+		expected, err := p.EncodingSize(val)
 
-		binary.Decode(page.Bytes()[offset:offset+p.Offset(valsize)], binary.NativeEndian, &got)
+		asserNoError(t, err)
 
-		if got != val {
-			t.Errorf("got '%d' but expected '%d'", got, val)
+		if got != expected {
+			t.Errorf("SetInt failed: got '%d' but expected '%d' written bytes", got, val)
 		}
 	})
 
@@ -69,7 +67,7 @@ func TestSetInt(t *testing.T) {
 		var val int32 = 1337
 		var offset p.Offset = 40
 
-		err := page.SetInt32(val, offset)
+		_, err := page.SetInt32(val, offset)
 
 		asserError(t, err)
 	})
@@ -80,7 +78,7 @@ func TestSetInt(t *testing.T) {
 		var val int32 = 1337
 		var offset p.Offset = -40
 
-		err := page.SetInt32(val, offset)
+		_, err := page.SetInt32(val, offset)
 
 		asserError(t, err)
 	})
@@ -93,7 +91,7 @@ func TestGetInt(t *testing.T) {
 		var expected int32 = 1337
 		var offset p.Offset = 0
 
-		err := page.SetInt32(expected, offset)
+		_, err := page.SetInt32(expected, offset)
 
 		asserNoError(t, err)
 
@@ -112,7 +110,7 @@ func TestGetInt(t *testing.T) {
 		var expected int32 = 1337
 		var offset p.Offset = 13
 
-		err := page.SetInt32(expected, offset)
+		_, err := page.SetInt32(expected, offset)
 
 		asserNoError(t, err)
 
@@ -154,7 +152,7 @@ func TestEncodingSize(t *testing.T) {
 		asserNoError(t, err)
 
 		if got != expected {
-			t.Errorf("size: got '%d' but expected '%d'", got, expected)
+			t.Errorf("size : got '%d' but expected '%d'", got, expected)
 		}
 	})
 
@@ -212,16 +210,16 @@ func TestSetGetBlob(t *testing.T) {
 		blob := []byte{1, 2, 3, 4, 5, 6}
 		offset := p.Offset(0)
 
-		err := page.SetBlob(blob, offset)
+		got, err := page.SetBlob(blob, offset)
 
 		asserNoError(t, err)
 
-		got, err := page.GetBlob(offset)
+		expected, err := p.EncodingSize(blob)
 
 		asserNoError(t, err)
 
-		if bytes.Equal(blob, got) != true {
-			t.Errorf("blob: got %v but expected %v", got, blob)
+		if got != expected {
+			t.Errorf("Setblob failed: got '%v' but expected '%v' writen bytes", got, expected)
 		}
 	})
 
@@ -231,16 +229,16 @@ func TestSetGetBlob(t *testing.T) {
 		blob := []byte{1, 2, 3, 4, 5, 6}
 		offset := p.Offset(13)
 
-		err := page.SetBlob(blob, offset)
+		got, err := page.SetBlob(blob, offset)
 
 		asserNoError(t, err)
 
-		got, err := page.GetBlob(offset)
+		expected, err := p.EncodingSize(blob)
 
 		asserNoError(t, err)
 
-		if bytes.Equal(blob, got) != true {
-			t.Errorf("blob: got %v but expected %v", got, blob)
+		if got != expected {
+			t.Errorf("Setblob failed: got '%v' but expected '%v' writen bytes", got, expected)
 		}
 	})
 
@@ -250,7 +248,7 @@ func TestSetGetBlob(t *testing.T) {
 		blob := []byte{1, 2, 3, 4, 5, 6}
 		offset := p.Offset(42)
 
-		err := page.SetBlob(blob, offset)
+		_, err := page.SetBlob(blob, offset)
 
 		asserError(t, err)
 
@@ -265,7 +263,7 @@ func TestSetGetBlob(t *testing.T) {
 		blob := []byte{1, 2, 3, 4, 5, 6}
 		offset := p.Offset(-42)
 
-		err := page.SetBlob(blob, offset)
+		_, err := page.SetBlob(blob, offset)
 
 		asserError(t, err)
 
@@ -279,38 +277,38 @@ func TestSetGetString(t *testing.T) {
 	t.Run("setting & getting a string at offset 0", func(t *testing.T) {
 		page := p.NewPage(42)
 
-		expected := "hello there"
+		str := "hello there"
 		offset := p.Offset(0)
 
-		err := page.SetString(expected, offset)
+		got, err := page.SetString(str, offset)
 
 		asserNoError(t, err)
 
-		got, err := page.GetString(offset)
+		expected, err := p.EncodingSize(str)
 
 		asserNoError(t, err)
 
 		if got != expected {
-			t.Errorf("string: got %q but expected %q", got, expected)
+			t.Errorf("SetString failed: got '%d' but expected '%d' written bytes", got, expected)
 		}
 	})
 
 	t.Run("setting & getting a string at offset 13", func(t *testing.T) {
 		page := p.NewPage(42)
 
-		expected := "hello there"
+		str := "hello there"
 		offset := p.Offset(13)
 
-		err := page.SetString(expected, offset)
+		got, err := page.SetString(str, offset)
 
 		asserNoError(t, err)
 
-		got, err := page.GetString(offset)
+		expected, err := p.EncodingSize(str)
 
 		asserNoError(t, err)
 
 		if got != expected {
-			t.Errorf("string: got %q but expected %q", got, expected)
+			t.Errorf("SetString failed: got '%d' but expected '%d' written bytes", got, expected)
 		}
 	})
 }

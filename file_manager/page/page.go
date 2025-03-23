@@ -45,12 +45,12 @@ func EncodingSize(v any) (int, error) {
 //
 // Return an error in case offset or offset + valsize is outside of page
 // bounds
-func (p *Page) SetInt32(val int32, offset Offset) error {
+func (p *Page) SetInt32(val int32, offset Offset) (int, error) {
 
 	var valSize int = binary.Size(val)
 
-	if int(offset)+valSize > cap(p.bytes) || offset < 0 {
-		return errors.New("attempting to write outside the page bounds")
+	if offset+valSize > cap(p.bytes) || offset < 0 {
+		return 0, errors.New("attempting to write outside the page bounds")
 	}
 
 	buf := make([]byte, valSize)
@@ -59,12 +59,15 @@ func (p *Page) SetInt32(val int32, offset Offset) error {
 	count, err := binary.Encode(buf, binary.NativeEndian, val)
 
 	if err != nil {
-		return errors.Wrapf(err, "failed to Encode val '%d', consumed bytes: '%d'", val, count)
+		return 0, errors.Wrapf(err, "failed to Encode val '%d', consumed bytes: '%d'", val, count)
 	}
 
-	copy(p.bytes[offset:offset+Offset(valSize)], buf)
+	start := offset
+	end := offset + valSize
 
-	return nil
+	n := copy(p.bytes[start:end], buf)
+
+	return n, nil
 }
 
 // Decode the binary encoding (NativeEndian byte order) of type Int32
@@ -77,7 +80,7 @@ func (p *Page) GetInt32(offset Offset) (int32, error) {
 
 	valsize := binary.Size(val)
 
-	if int(offset) > cap(p.bytes) || offset < 0 {
+	if offset > cap(p.bytes) || offset < 0 {
 		return 0, errors.New("reading exceedes page bounds")
 	}
 
@@ -90,29 +93,33 @@ func (p *Page) GetInt32(offset Offset) (int32, error) {
 	return val, nil
 }
 
-func (p *Page) SetBlob(blob []byte, offset Offset) error {
+func (p *Page) SetBlob(blob []byte, offset Offset) (int, error) {
 	len := int32(len(blob))
 
 	size, err := EncodingSize(blob)
 
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	if int(offset)+size > cap(p.bytes) || offset < 0 {
-		return errors.New("attempting to write outside the page bounds")
+	if offset+size > cap(p.bytes) || offset < 0 {
+		return 0, errors.New("attempting to write outside the page bounds")
 	}
 
-	p.SetInt32(len, offset)
+	n, err := p.SetInt32(len, offset)
+
+	if err != nil {
+		return 0, errors.Wrapf(err, "SetBlob failed")
+	}
 
 	prefixSize, _ := EncodingSize(len)
 
-	start := int(offset) + prefixSize
-	end := int(offset) + size
+	start := offset + prefixSize
+	end := offset + size
 
-	copy(p.bytes[start:end], blob)
+	n += copy(p.bytes[start:end], blob)
 
-	return nil
+	return n, nil
 }
 
 func (p *Page) GetBlob(offset Offset) ([]byte, error) {
@@ -133,7 +140,7 @@ func (p *Page) GetBlob(offset Offset) ([]byte, error) {
 	return buff, nil
 }
 
-func (p *Page) SetString(str string, offset Offset) error {
+func (p *Page) SetString(str string, offset Offset) (int, error) {
 	return p.SetBlob([]byte(str), offset)
 }
 

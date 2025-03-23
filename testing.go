@@ -54,7 +54,7 @@ func main() {
 
 	// fmt.Printf("err: %+v\n", err)
 
-	fm, err := filemanager.NewFileManager("../makefile", 512)
+	fm, err := filemanager.NewFileManager("./makefile", 512)
 
 	if err != nil {
 		fmt.Printf("err: %v\n", err)

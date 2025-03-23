@@ -91,9 +91,8 @@ func TestNewFileManager(t *testing.T) {
 	}
 }
 
-
 func TestRead(t *testing.T) {
 	t.Run("Reading from file doesnt exist", func(t *testing.T) {
-		
+
 	})
 }

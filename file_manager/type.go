@@ -5,10 +5,6 @@ import (
 	"Clotho/file_manager/page"
 )
 
+type BlockID = block.BlockID
 
-
-type BlockID block.BlockID
-
-type Page page.Page
-
-
+type Page = page.Page

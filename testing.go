@@ -64,6 +64,23 @@ func main() {
 		fmt.Printf("fm: %v\n", fm)
 	}
 
+	length, err := fm.Length("test")
+
+	if err != nil {
+		fmt.Printf("err: %v\n", err)
+	}
+
+	fmt.Println("test length (block number): ", length)
+
+	fm.Extend("test")
+
+	length, err = fm.Length("test")
+
+	if err != nil {
+		fmt.Printf("err: %v\n", err)
+	}
+
+	fmt.Println("test length (block number): ", length)
 }
 
 /*

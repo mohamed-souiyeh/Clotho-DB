@@ -21,22 +21,22 @@ func NewPage(size uint) *Page {
 
 func EncodingSize(v any) (int, error) {
 
-	switch v := v.(type) {
+	switch t := v.(type) {
 	case int32:
-		return binary.Size(v), nil
+		return binary.Size(t), nil
 	// case uint32:
 	// 	return binary.Size(v), nil
 	case string:
-		buf := []byte(v)
+		buf := []byte(t)
 		return EncodingSize(buf)
 	case []byte:
-		return binary.Size(int32(1)) + binary.Size(v), nil
+		return binary.Size(int32(1)) + binary.Size(t), nil
 	case int:
 		return -1, errors.New("specify the size of the int (e.g: int8, in16...)")
 	case uint:
 		return -1, errors.New("specify the size of the int (e.g: uint8, uin16...)")
 	default:
-		return -1, errors.New("Unsupported type")
+		return -1, errors.Errorf("Unsupported type: %t", t)
 	}
 }
 

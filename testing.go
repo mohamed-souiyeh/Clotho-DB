@@ -2,6 +2,7 @@ package main
 
 import (
 	filemanager "Clotho/file_manager"
+	"Clotho/file_manager/page"
 	"fmt"
 )
 
@@ -53,6 +54,24 @@ func main() {
 	// err = os.MkdirAll("./makefile", 0755)
 
 	// fmt.Printf("err: %+v\n", err)
+
+
+	data := "hello world"
+
+	p := page.NewPage(32)
+
+	eSize, _ := page.EncodingSize(data)
+
+	fmt.Println("encoding size of Data: ", eSize)
+
+	p.SetString(data, 0)
+
+	fmt.Println("page buffer len if data set at offset 5: ", len(p.Bytes()))
+
+
+
+
+
 
 	fm, err := filemanager.NewFileManager("./makefile", 512)
 

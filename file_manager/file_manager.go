@@ -57,7 +57,10 @@ type FileManager struct {
 }
 
 /*
-it need to check if the dbPath exist, if not create one.
+	- create a file manager instence in the dbPath. 
+		dbPath need to be a full path (can be absolute or relative)
+		blockSize need to be bigger than 0 and prefferably align with the
+		OS block size (4096 is most of the time).
 TODO - add the removal of temp files created by *materialized* opration.
 */
 func NewFileManager(dbPath string, blockSize int) (*FileManager, error) {
@@ -136,7 +139,7 @@ func (fm *FileManager) validateOffset(fileName string, offset int64) error {
 	}
 
 	if length <= offset || offset < 0 {
-		return errors.Wrapf(err, "File manager validatOffset: Bad Offset")
+		return errors.New("File manager validatOffset: Bad Offset")
 	}
 
 	return nil

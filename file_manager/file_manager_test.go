@@ -2,8 +2,11 @@ package filemanager_test
 
 import (
 	filemanager "Clotho/file_manager"
+	"Clotho/file_manager/block"
+	"Clotho/file_manager/page"
 	"os"
 	"path/filepath"
+	"slices"
 	"testing"
 )
 
@@ -93,9 +96,44 @@ func TestNewFileManager(t *testing.T) {
 
 // TODO: i need to write tests, but i dont see a point of doing it now
 
+func TestReadWrite(t *testing.T) {
+	tmpDir := t.TempDir()
 
-// func TestRead(t *testing.T) {
-// 	t.Run("Reading from file doesnt exist", func(t *testing.T) {
+	dbPath := filepath.Join(tmpDir, "testDB")
 
-// 	})
-// }
+	fm, err := filemanager.NewFileManager(dbPath, 32)
+
+	if err != nil {
+		t.Fatalf("failed to create the file manager: %s", err.Error())
+	}
+
+	data := "wsuup"
+	
+	dataBlock := block.BlockID {
+		Filename: "testFile",
+		Blknum: 0,
+	}
+
+	fm.Extend(dataBlock.Filename)
+	expectedPage := page.NewPage(uint(fm.BlockSize()))
+	expectedPage.SetString(data, 10)
+
+
+	_, err = fm.Write(dataBlock, expectedPage)
+
+	if err != nil {
+		t.Fatalf("failed to write to the file manager test file: %s", err.Error())
+	}
+
+	gottenPage := page.NewPage(uint(fm.BlockSize()))
+
+	_, err = fm.Read(dataBlock, gottenPage)
+
+	if err != nil {
+		t.Fatalf("failed to read the data into memory: %s", err.Error())
+	}
+
+	if !slices.Equal(gottenPage.Bytes(), expectedPage.Bytes()) {
+		t.Errorf("got %v but expected %v", gottenPage.Bytes(), expectedPage.Bytes())
+	}
+}
